@@ -38,6 +38,7 @@ struct Voice : public juce::SynthesiserVoice {
     juce::dsp::Gain<float>       d_gain;
     juce::ADSR                   d_adsr;
     juce::ADSR::Parameters       d_adsrParameters = {0.01f, 0.01f, 1.0f, 0.2f};
+    juce::AudioBuffer<float>     d_audioBuffer;
 
     double d_width      = 0.0;
     double currentAngle = 0.0;

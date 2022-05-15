@@ -27,6 +27,9 @@ void Voice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound
 
 void Voice::stopNote(float, bool allowTailOff) {
     d_adsr.noteOff();
+
+    if (!allowTailOff || !d_adsr.isActive())
+        clearCurrentNote();
     //    if (allowTailOff) {
     //        // start a tail-off by setting this flag. The render callback will pick up on
     //        // this and do a fade out, calling clearCurrentNote() when it's finished.
@@ -61,10 +64,23 @@ void Voice::fillCurrentSample(AudioBuffer<float>& outputBuffer, int startSample)
 }
 
 void Voice::renderNextBlock(AudioBuffer<float>& outputBuffer, int startSample, int numSamples) {
-    juce::dsp::AudioBlock<float> audioBlock{outputBuffer};
+    if (!isVoiceActive())
+        return;
+
+    d_audioBuffer.setSize(outputBuffer.getNumChannels(), numSamples, false, false, true);
+    d_audioBuffer.clear();
+
+    juce::dsp::AudioBlock<float> audioBlock{d_audioBuffer};
     d_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     d_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    d_adsr.applyEnvelopeToBuffer(outputBuffer, startSample, numSamples);
+    d_adsr.applyEnvelopeToBuffer(d_audioBuffer, 0, d_audioBuffer.getNumSamples());
+
+    for (size_t i = 0; i != outputBuffer.getNumChannels(); ++i) {
+        outputBuffer.addFrom(i, startSample, d_audioBuffer, i, 0, numSamples);
+    }
+
+    if (!d_adsr.isActive())
+        clearCurrentNote();
 
     //    if (angleDelta != 0.0) {
     //        if (tailOff > 0.0) {

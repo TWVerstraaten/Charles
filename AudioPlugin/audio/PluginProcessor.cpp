@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 
-#include "../AudioSynthesiserDemo.h"
 #include "../view/PluginEditor.h"
 #include "Voice.h"
 
