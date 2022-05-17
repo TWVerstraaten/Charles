@@ -6,11 +6,12 @@
 #define AUDIO_PLUGIN_EXAMPLE_VOICE_H
 
 #include "../JuceHeader.h"
+#include "Oscillator.h"
 #include "Sound.h"
 
 struct Voice : public juce::SynthesiserVoice {
 
-    Voice() = default;
+    Voice();
 
     bool canPlaySound(juce::SynthesiserSound* sound) override;
     void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int /*currentPitchWheelPosition*/) override;
@@ -34,12 +35,15 @@ struct Voice : public juce::SynthesiserVoice {
 
     void fillCurrentSample(AudioBuffer<float>& outputBuffer, int startSample);
 
+    Oscillator d_oscillator;
+
     juce::dsp::Oscillator<float> d_osc{[](float x) { return std::sin(x); }};
     juce::dsp::Gain<float>       d_gain;
     juce::ADSR                   d_adsr;
-    juce::ADSR::Parameters       d_adsrParameters = {0.01f, 0.01f, 1.0f, 0.2f};
+    juce::ADSR::Parameters       d_adsrParameters = {0.01f, 0.01f, 1.0f, 0.5f};
     juce::AudioBuffer<float>     d_audioBuffer;
 
+    size_t d_elapsed    = 0;
     double d_width      = 0.0;
     double currentAngle = 0.0;
     double angleDelta   = 0.0;

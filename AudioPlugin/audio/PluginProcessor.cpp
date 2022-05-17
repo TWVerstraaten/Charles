@@ -12,8 +12,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
       ) {
-    //    for (size_t i = 0; i != 2; ++i)
-    synth.addVoice(new Voice{});
+    for (size_t i = 0; i != 7; ++i)
+        synth.addVoice(new Voice{});
 
     synth.clearSounds();
     synth.addSound(new Sound());

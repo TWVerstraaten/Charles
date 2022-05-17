@@ -6,19 +6,25 @@
 
 #include "../misc/functions.h"
 
+Voice::Voice() {
+    d_adsr.setParameters(d_adsrParameters);
+}
+
 bool Voice::canPlaySound(juce::SynthesiserSound* sound) {
     return dynamic_cast<Sound*>(sound) != nullptr;
 }
 
 void Voice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int) {
     d_adsr.noteOn();
-    d_adsr.setParameters(d_adsrParameters);
-    d_osc.setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber));
 
-    //    currentAngle = 0.0;
-    //    level        = d_volume * velocity;
-    //    tailOff      = 0.0;
+    d_osc.setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber), true);
+    d_elapsed = 0;
+    //        d_oscillator.reset();
     //
+    //    currentAngle = 0.0;
+    //    level        = 1.0 * velocity;
+    //    tailOff      = 0.0;
+    //    //
     //    auto cyclesPerSecond = juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     //    auto cyclesPerSample = cyclesPerSecond / getSampleRate();
     //
@@ -27,17 +33,18 @@ void Voice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound
 
 void Voice::stopNote(float, bool allowTailOff) {
     d_adsr.noteOff();
-
-    if (!allowTailOff || !d_adsr.isActive())
+    if (!allowTailOff || !d_adsr.isActive()) {
+        d_oscillator.reset();
         clearCurrentNote();
+    }
     //    if (allowTailOff) {
-    //        // start a tail-off by setting this flag. The render callback will pick up on
-    //        // this and do a fade out, calling clearCurrentNote() when it's finished.
+    //        //     start a tail-off by setting this flag. The render callback will pick up on
+    //        //        this and do a fade out, calling clearCurrentNote() when it's finished.
     //
     //        if (tailOff == 0.0) // we only need to begin a tail-off if it's not already doing so - the
     //            tailOff = 1.0;  // stopNote method could be called more than once.
     //    } else {
-    //        // we're being told to stop playing immediately, so reset everything..
+    //        //     we're being told to stop playing immediately, so reset everything..
     //        clearCurrentNote();
     //        angleDelta = 0.0;
     //    }
@@ -73,11 +80,16 @@ void Voice::renderNextBlock(AudioBuffer<float>& outputBuffer, int startSample, i
     juce::dsp::AudioBlock<float> audioBlock{d_audioBuffer};
     d_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     d_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    //    for (size_t i = 0; i != numSamples; ++i) {
+    //        const auto f = d_oscillator.getNextSample() * d_adsr.getNextSample();
+    //        for (size_t c = 0; c != outputBuffer.getNumChannels(); ++c)
+    //            outputBuffer.addSample(c, i, f);
+    //    }
+
     d_adsr.applyEnvelopeToBuffer(d_audioBuffer, 0, d_audioBuffer.getNumSamples());
 
-    for (size_t i = 0; i != outputBuffer.getNumChannels(); ++i) {
+    for (size_t i = 0; i != outputBuffer.getNumChannels(); ++i)
         outputBuffer.addFrom(i, startSample, d_audioBuffer, i, 0, numSamples);
-    }
 
     if (!d_adsr.isActive())
         clearCurrentNote();

@@ -9,10 +9,7 @@
 
 namespace fns {
 
-    double modOne(double x) {
-        static double dummy;
-        return std::modf(x, &dummy);
-    }
+    double modOne(double x);
 
 } // namespace fns
 

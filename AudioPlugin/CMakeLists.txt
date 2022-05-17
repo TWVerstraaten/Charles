@@ -71,6 +71,8 @@ target_sources(AudioPluginExample
         PRIVATE
         audio/Sound.cpp
         audio/Voice.cpp
+        misc/functions.cpp
+        audio/Oscillator.cpp
         view/PluginEditor.cpp
         audio/PluginProcessor.cpp)
 
